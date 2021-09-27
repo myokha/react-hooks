@@ -43,18 +43,15 @@ function makeInitialMove() {
     {
       id: makeId(),
       value: Array(9).fill(null),
+      isSelected: true,
     },
   ]
 }
 
 function Game() {
   const [moves, setMoves] = useLocalStorageState('moves', makeInitialMove())
-  const [selectedMoveId, setSelectedMoveId] = useLocalStorageState(
-    'selectedMoveId',
-    moves[moves.length - 1].id,
-  )
 
-  const squares = moves[moves.length - 1].value
+  const {value: squares} = moves.find(move => move.isSelected)
   const nextValue = calculateNextValue(squares)
   const winner = calculateWinner(squares)
   const status = calculateStatus(winner, squares, nextValue)
@@ -66,20 +63,30 @@ function Game() {
     const value = [...squares]
     value[square] = nextValue
 
-    const id = makeId()
-
     setMoves([
-      ...moves,
+      ...moves.map(move => ({...move, isSelected: false})),
       {
-        id,
+        id: makeId(),
         value,
+        isSelected: true,
       },
     ])
-    setSelectedMoveId(id)
   }
 
   function restart() {
     setMoves(makeInitialMove())
+  }
+
+  function onSelectMove(moveId) {
+    setMoves(
+      moves.map(move => {
+        if (move.id === moveId) {
+          return {...move, isSelected: true}
+        }
+
+        return {...move, isSelected: false}
+      }),
+    )
   }
 
   return (
@@ -95,13 +102,17 @@ function Game() {
         <ol>
           {moves.map((move, index) => {
             const isFirst = index === 0
-            const isSelected = move.id === selectedMoveId
+            const isSelected = move.isSelected
 
             return (
               <li key={move.id}>
                 <button
                   disabled={isSelected}
-                  onClick={() => console.log('⚡️=== move', move)}
+                  onClick={() => {
+                    if (move.isSelected) return // not totally necessary, it's a microoptimization
+
+                    onSelectMove(move.id)
+                  }}
                 >
                   Go to {isFirst ? 'game start' : `move #${index}`}
                   {isSelected && ' (current)'}
