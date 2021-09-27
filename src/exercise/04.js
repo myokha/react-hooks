@@ -49,6 +49,10 @@ function makeInitialMove() {
 
 function Game() {
   const [moves, setMoves] = useLocalStorageState('moves', makeInitialMove())
+  const [selectedMoveId, setSelectedMoveId] = useLocalStorageState(
+    'selectedMoveId',
+    moves[moves.length - 1].id,
+  )
 
   const squares = moves[moves.length - 1].value
   const nextValue = calculateNextValue(squares)
@@ -62,13 +66,16 @@ function Game() {
     const value = [...squares]
     value[square] = nextValue
 
+    const id = makeId()
+
     setMoves([
       ...moves,
       {
-        id: makeId(),
+        id,
         value,
       },
     ])
+    setSelectedMoveId(id)
   }
 
   function restart() {
@@ -88,13 +95,16 @@ function Game() {
         <ol>
           {moves.map((move, index) => {
             const isFirst = index === 0
-            const isLast = index === moves.length - 1
+            const isSelected = move.id === selectedMoveId
 
             return (
               <li key={move.id}>
-                <button disabled={isLast}>
+                <button
+                  disabled={isSelected}
+                  onClick={() => console.log('⚡️=== move', move)}
+                >
                   Go to {isFirst ? 'game start' : `move #${index}`}
-                  {isLast && ' (current)'}
+                  {isSelected && ' (current)'}
                 </button>
               </li>
             )
