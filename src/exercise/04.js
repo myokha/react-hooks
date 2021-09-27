@@ -34,11 +34,23 @@ function Board({selectSquare, squares}) {
   )
 }
 
+function makeId() {
+  return Date.now()
+}
+
+function makeInitialMove() {
+  return [
+    {
+      id: makeId(),
+      value: Array(9).fill(null),
+    },
+  ]
+}
+
 function Game() {
-  const [squares, setSquares] = useLocalStorageState(
-    'squares',
-    Array(9).fill(null),
-  )
+  const [moves, setMoves] = useLocalStorageState('moves', makeInitialMove())
+
+  const squares = moves[moves.length - 1].value
   const nextValue = calculateNextValue(squares)
   const winner = calculateWinner(squares)
   const status = calculateStatus(winner, squares, nextValue)
@@ -47,14 +59,20 @@ function Game() {
     if (winner) return
     if (squares[square]) return
 
-    const squaresCopy = [...squares]
-    squaresCopy[square] = nextValue
+    const value = [...squares]
+    value[square] = nextValue
 
-    setSquares(squaresCopy)
+    setMoves([
+      ...moves,
+      {
+        id: makeId(),
+        value,
+      },
+    ])
   }
 
   function restart() {
-    setSquares(Array(9).fill(null))
+    setMoves(makeInitialMove())
   }
 
   return (
@@ -67,7 +85,21 @@ function Game() {
       </div>
       <div className="game-info">
         <div>{status}</div>
-        <ol>{}</ol>
+        <ol>
+          {moves.map((move, index) => {
+            const isFirst = index === 0
+            const isLast = index === moves.length - 1
+
+            return (
+              <li key={move.id}>
+                <button disabled={isLast}>
+                  Go to {isFirst ? 'game start' : `move #${index}`}
+                  {isLast && ' (current)'}
+                </button>
+              </li>
+            )
+          })}
+        </ol>
       </div>
     </div>
   )
