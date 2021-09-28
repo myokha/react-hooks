@@ -34,18 +34,16 @@ function Board({selectSquare, squares}) {
   )
 }
 
-function makeId() {
-  return Date.now()
+function createNewMove(newMoveValue) {
+  return {
+    id: Date.now(),
+    value: newMoveValue,
+    isSelected: true,
+  }
 }
 
 function makeInitialMove() {
-  return [
-    {
-      id: makeId(),
-      value: Array(9).fill(null),
-      isSelected: true,
-    },
-  ]
+  return [createNewMove(Array(9).fill(null))]
 }
 
 function Game() {
@@ -63,14 +61,19 @@ function Game() {
     const value = [...squares]
     value[square] = nextValue
 
-    setMoves([
-      ...moves.map(move => ({...move, isSelected: false})),
-      {
-        id: makeId(),
-        value,
-        isSelected: true,
-      },
-    ])
+    const selectedMoveIndex = moves.findIndex(move => move.isSelected)
+    const isLastMoveSelected = selectedMoveIndex === moves.length - 1
+
+    const reSettedMoves = moves.map(move => ({...move, isSelected: false}))
+
+    if (isLastMoveSelected) {
+      setMoves([...reSettedMoves, createNewMove(value)])
+    } else {
+      setMoves([
+        ...reSettedMoves.slice(0, selectedMoveIndex + 1),
+        createNewMove(value),
+      ])
+    }
   }
 
   function restart() {
