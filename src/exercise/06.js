@@ -20,6 +20,12 @@ const statuses = {
   rejected: 'rejected',
 }
 
+// In the future, you'll learn about how `useReducer` can solve this problem really
+// elegantly, but we can still accomplish this by storing our state as an object
+// that has all the properties of state we're managing.
+
+// oops :)
+
 function reducer(state, action) {
   switch (action.type) {
     case statuses.idle:
