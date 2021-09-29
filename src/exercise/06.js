@@ -13,6 +13,31 @@ import {
   fetchPokemon,
 } from '../pokemon'
 
+class ErrorBoundary extends React.Component {
+  state = {
+    error: null,
+  }
+
+  static getDerivedStateFromError(error) {
+    // Update state so the next render will show the fallback UI.
+    return {error}
+  }
+
+  render() {
+    if (this.state.error) {
+      // You can render any custom fallback UI
+      return (
+        <div>
+          There was an error:{' '}
+          <pre style={{whiteSpace: 'normal'}}>{this.state.error.message}</pre>
+        </div>
+      )
+    }
+
+    return this.props.children
+  }
+}
+
 const statuses = {
   idle: 'idle',
   pending: 'pending',
@@ -102,12 +127,7 @@ function PokemonInfo({pokemonName}) {
 
   switch (state.status) {
     case statuses.rejected:
-      return (
-        <div role="alert">
-          There was an error:{' '}
-          <pre style={{whiteSpace: 'normal'}}>{state.error.message}</pre>
-        </div>
-      )
+      throw state.error
     case statuses.idle:
       return 'Submit a pokemon'
     case statuses.pending:
@@ -131,7 +151,9 @@ function App() {
       <PokemonForm pokemonName={pokemonName} onSubmit={handleSubmit} />
       <hr />
       <div className="pokemon-info">
-        <PokemonInfo pokemonName={pokemonName} />
+        <ErrorBoundary>
+          <PokemonInfo pokemonName={pokemonName} />
+        </ErrorBoundary>
       </div>
     </div>
   )
