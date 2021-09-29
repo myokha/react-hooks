@@ -28,20 +28,25 @@ const statuses = {
 
 function reducer(state, action) {
   switch (action.type) {
-    case statuses.idle:
-      return {...state, status: statuses.idle}
     case statuses.pending:
-      return {...state, status: statuses.pending}
+      return {
+        ...state,
+        status: statuses.pending,
+        pokemon: null,
+        error: null,
+      }
     case statuses.resolved:
       return {
         ...state,
         status: statuses.resolved,
         pokemon: action.pokemon,
+        error: null,
       }
     case statuses.rejected:
       return {
         ...state,
         status: statuses.rejected,
+        pokemon: null,
         error: action.error,
       }
     default:
@@ -103,10 +108,8 @@ function PokemonInfo({pokemonName}) {
           <pre style={{whiteSpace: 'normal'}}>{state.error.message}</pre>
         </div>
       )
-
     case statuses.idle:
       return 'Submit a pokemon'
-
     case statuses.pending:
       return <PokemonInfoFallback name={pokemonName} />
     case statuses.resolved:
