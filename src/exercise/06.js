@@ -13,10 +13,43 @@ import {
   fetchPokemon,
 } from '../pokemon'
 
+const statuses = {
+  idle: 'idle',
+  pending: 'pending',
+  resolved: 'resolved',
+  rejected: 'rejected',
+}
+
+function reducer(state, action) {
+  switch (action.type) {
+    case statuses.idle:
+      return {...state, status: statuses.idle}
+    case statuses.pending:
+      return {...state, status: statuses.pending}
+    case statuses.resolved:
+      return {
+        ...state,
+        status: statuses.resolved,
+        pokemon: action.pokemon,
+      }
+    case statuses.rejected:
+      return {
+        ...state,
+        status: statuses.rejected,
+        error: action.error,
+      }
+    default:
+      throw new Error('Oh no 😱')
+  }
+}
+
 function PokemonInfo({pokemonName}) {
   // 🐨 Have state for the pokemon (null)
-  const [pokemon, setPokemon] = React.useState(null)
-  const [error, setError] = React.useState(null)
+  const [state, dispatch] = React.useReducer(reducer, {
+    status: statuses.idle,
+    error: null,
+    pokemon: null,
+  })
   // 🐨 use React.useEffect where the callback should be called whenever the
   // pokemon name changes.
   // 💰 DON'T FORGET THE DEPENDENCIES ARRAY!
@@ -24,7 +57,10 @@ function PokemonInfo({pokemonName}) {
     // 💰 if the pokemonName is falsy (an empty string) then don't bother making the request (exit early).
     if (!pokemonName) return
     // 🐨 before calling `fetchPokemon`, clear the current pokemon state by setting it to null
-    setPokemon(null)
+    dispatch({
+      type: statuses.pending,
+      pokemon: null,
+    })
     // 💰 Use the `fetchPokemon` function to fetch a pokemon by its name:
     //   fetchPokemon('Pikachu').then(
     //     pokemonData => { /* update all the state here */},
@@ -33,9 +69,15 @@ function PokemonInfo({pokemonName}) {
       try {
         const pokemon = await fetchPokemon(pokemonName)
 
-        setPokemon(pokemon)
+        dispatch({
+          type: 'resolved',
+          pokemon,
+        })
       } catch (error) {
-        setError(error)
+        dispatch({
+          type: 'rejected',
+          error,
+        })
       }
     }
 
@@ -47,19 +89,25 @@ function PokemonInfo({pokemonName}) {
   //   2. pokemonName but no pokemon: <PokemonInfoFallback name={pokemonName} />
   //   3. pokemon: <PokemonDataView pokemon={pokemon} />
 
-  if (error) {
-    return (
-      <div role="alert">
-        There was an error:{' '}
-        <pre style={{whiteSpace: 'normal'}}>{error.message}</pre>
-      </div>
-    )
+  switch (state.status) {
+    case statuses.rejected:
+      return (
+        <div role="alert">
+          There was an error:{' '}
+          <pre style={{whiteSpace: 'normal'}}>{state.error.message}</pre>
+        </div>
+      )
+
+    case statuses.idle:
+      return 'Submit a pokemon'
+
+    case statuses.pending:
+      return <PokemonInfoFallback name={pokemonName} />
+    case statuses.resolved:
+      return <PokemonDataView pokemon={state.pokemon} />
+    default:
+      throw new Error('Shoot...')
   }
-
-  if (!pokemonName) return 'Submit a pokemon'
-  if (!pokemon) return <PokemonInfoFallback name={pokemonName} />
-
-  return <PokemonDataView pokemon={pokemon} />
 }
 
 function App() {
